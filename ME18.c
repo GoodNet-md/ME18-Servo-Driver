@@ -23,10 +23,16 @@ ME18_HandleTypeDef hME18 = {.init=ME18_INIT};
 
 
 int float_to_uint(float x, float x_min, float x_max, int bits){
-  /// Converts a float to an unsigned int, given range and number of bits ///
-  float span = x_max - x_min;
-  float offset = x_min;
-  return (int) ((x-offset)*((float)((1<<bits)-1))/span);
+    /// Converts a float to an unsigned int, given range and number of bits ///
+    float span = x_max - x_min;
+    float offset = x_min;
+    return (int) ((x-offset)*((float)((1<<bits)-1))/span);
+}
+
+float uint_to_float(uint16_t x, float x_min, float x_max, int bit){
+    float span = x_max - x_min;
+    float offset = x_min;
+    return (float) (((x*span)/(float)((1<<bit)-1))+offset);
 }
 
 void ME18_reset(){
@@ -95,12 +101,12 @@ void ME18_start(){
         Error_Handler();
     }
 }
-void ME18_setPos(uint16_t pos){
+void ME18_setPos(float pos){
     if(pos > 8*360) pos = 8*360;
 
     int position, velocity, kp, kd, torque;
-    float radPos = (float)pos/180.0f*3.1415926f - 4.0f*3.1415926f;
-    
+    // float radPos = (float)pos/180.0f*3.1415926f - 4.0f*3.1415926f;
+    float radPos = (float)pos/180.0f*3.1415926f;
     position = float_to_uint(radPos, -4*3.1415926,4*3.1415926,16);
     velocity = float_to_uint(0,-30,30,12);
     kp = float_to_uint(50.0,0,500,12);
@@ -129,7 +135,7 @@ void ME18_setPos(uint16_t pos){
     }
 }
 
-static void ME18_INIT(CAN_HandleTypeDef *hcan,uint8_t STDID){
+static void ME18_INIT(CAN_HandleTypeDef *hcan,uint32_t STDID){
     hME18.hcan = hcan;
     hME18.STDID = STDID;
 
@@ -139,3 +145,27 @@ static void ME18_INIT(CAN_HandleTypeDef *hcan,uint8_t STDID){
     hME18.set_pos = ME18_setPos;
 }
 
+HAL_StatusTypeDef ME18_CanMsgDecode(uint32_t Stdid, uint8_t* fdbData){
+    if (Stdid == 0x00)
+    {
+        uint16_t position, vel, current;
+        /**
+         * only position is useful
+        */
+        position = ((fdbData[1]<<8)|fdbData[0]);
+
+        /**
+         * Wait for someone nice to fix the decoding
+         * */
+        vel = (((fdbData[3]>>4)<<8)|(fdbData[2]));
+        current = (((fdbData[3]&0xF)<<8) | fdbData[4] );
+
+        hME18.FdbData.position = uint_to_float(position, -4*3.1415926f,4*3.1415926f,16);
+        hME18.FdbData.velocity = uint_to_float(vel,-30.0f,30.0f,12);
+        hME18.FdbData.current = uint_to_float(current, -40.0f, 40.0f, 12);
+
+        return HAL_OK;
+    }
+    return HAL_ERROR;
+    
+}
