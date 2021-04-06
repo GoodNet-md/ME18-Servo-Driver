@@ -11,6 +11,11 @@ typedef enum{
     ME18_Func_FOC
 }ME18_Func;
 
+typedef enum{
+    ME18_STOP = 0,
+    ME18_RUN
+}ME18_STATE;
+
 /** ME18 Motor Handler
  * init            ----> set hcan & STDID(default 0x01)
  * reset           ----> reset Motor
@@ -27,6 +32,8 @@ typedef struct
 		float velocity;			//反馈获得的电机速度
 		float current; 			//反馈获得的电机电流
 	}FdbData;	
+
+	ME18_STATE state;
 
 	void (*init)(CAN_HandleTypeDef *hcan,uint32_t STDID);  	//进行初始化 传入can句柄和舵机can通信的标准标识符
 	void (*reset)(void);									//矫正舵机让舵机转的更准 执行时舵机会自转两周 

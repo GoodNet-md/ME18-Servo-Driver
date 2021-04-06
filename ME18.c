@@ -53,11 +53,12 @@ void ME18_reset(){
     TxData[5]=0XFF;
     TxData[6]=0XFF;
     TxData[7]=0XFE;
-    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,&mailboxidx) != HAL_OK){
+    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,(uint32_t*)CAN_TX_MAILBOX0) != HAL_OK){
         Error_Handler();
     }
 }
 void ME18_stop(){
+    hME18.state = ME18_STOP;
     CAN_TxHeaderTypeDef TxHeader;
     uint8_t TxData[8];
     static uint32_t mailboxidx = 0;
@@ -75,14 +76,14 @@ void ME18_stop(){
     TxData[5]=0XFF;
     TxData[6]=0XFF;
     TxData[7]=0XFD;
-    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,&mailboxidx) != HAL_OK){
+    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,(uint32_t*)CAN_TX_MAILBOX0) != HAL_OK){
         Error_Handler();
     }
 }
 void ME18_start(){
+    hME18.state = ME18_RUN;
     CAN_TxHeaderTypeDef TxHeader;
     uint8_t TxData[8];
-    static uint32_t mailboxidx = 0;
 
     TxHeader.DLC=0x08;
     TxHeader.StdId=hME18.STDID;
@@ -97,13 +98,13 @@ void ME18_start(){
     TxData[5]=0XFF;
     TxData[6]=0XFF;
     TxData[7]=0XFC;
-    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,&mailboxidx) != HAL_OK){
+    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,(uint32_t*)CAN_TX_MAILBOX0) != HAL_OK){
         Error_Handler();
     }
 }
 void ME18_setPos(float pos){
-    if(pos > 8*360) pos = 8*360;
-
+    if(pos > 2*360) pos = 2*360;
+    if(pos < -2*360) pos = -720;
     int position, velocity, kp, kd, torque;
     // float radPos = (float)pos/180.0f*3.1415926f - 4.0f*3.1415926f;
     float radPos = (float)pos/180.0f*3.1415926f;
@@ -130,7 +131,7 @@ void ME18_setPos(float pos){
     TxData[5]=kd>>4;
     TxData[6]=((kd&0x000f)<<4)+(torque>>8);
     TxData[7]=torque&0x00ff;
-    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,&mailboxidx) != HAL_OK){
+    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,(uint32_t*)CAN_TX_MAILBOX0) != HAL_OK){
         Error_Handler();
     }
 }
@@ -143,6 +144,7 @@ static void ME18_INIT(CAN_HandleTypeDef *hcan,uint32_t STDID){
     hME18.start = ME18_start;
     hME18.stop = ME18_stop;
     hME18.set_pos = ME18_setPos;
+    hME18.state = ME18_STOP;
 }
 
 HAL_StatusTypeDef ME18_CanMsgDecode(uint32_t Stdid, uint8_t* fdbData){

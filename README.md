@@ -80,6 +80,8 @@ hME18.set_pos(uint16_t pos); //传入舵机转动的目标角度 范围-720~720 
 HAL_StatusTypeDef ME18_CanMsgDecode(uint32_t Stdid, uint8_t* fdbData);
 ```
 
+在执行`start` `stop` `set_pos` 函数后电机会发送一条反馈消息至can总线
+
 此函数会对收到的can消息进行解码
 
 `Stdid`为can消息Stdid
