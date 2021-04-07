@@ -53,7 +53,8 @@ void ME18_reset(){
     TxData[5]=0XFF;
     TxData[6]=0XFF;
     TxData[7]=0XFE;
-    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,(uint32_t*)CAN_TX_MAILBOX0) != HAL_OK){
+    uint32_t TxMailbox; 
+    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,&TxMailbox) != HAL_OK){
         Error_Handler();
     }
 }
@@ -76,7 +77,8 @@ void ME18_stop(){
     TxData[5]=0XFF;
     TxData[6]=0XFF;
     TxData[7]=0XFD;
-    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,(uint32_t*)CAN_TX_MAILBOX0) != HAL_OK){
+    uint32_t TxMailbox; 
+    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,&TxMailbox) != HAL_OK){
         Error_Handler();
     }
 }
@@ -98,7 +100,8 @@ void ME18_start(){
     TxData[5]=0XFF;
     TxData[6]=0XFF;
     TxData[7]=0XFC;
-    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,(uint32_t*)CAN_TX_MAILBOX0) != HAL_OK){
+    uint32_t TxMailbox; 
+    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,&TxMailbox) != HAL_OK){
         Error_Handler();
     }
 }
@@ -131,7 +134,8 @@ void ME18_setPos(float pos){
     TxData[5]=kd>>4;
     TxData[6]=((kd&0x000f)<<4)+(torque>>8);
     TxData[7]=torque&0x00ff;
-    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,(uint32_t*)CAN_TX_MAILBOX0) != HAL_OK){
+    uint32_t TxMailbox;
+    if(HAL_CAN_AddTxMessage(hME18.hcan,&TxHeader,TxData,&TxMailbox) != HAL_OK){
         Error_Handler();
     }
 }
